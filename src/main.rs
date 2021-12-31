@@ -13,11 +13,19 @@ use axum::{
     AddExtensionLayer, Router,
 };
 use clap::Parser;
+use opentelemetry::sdk::export::trace::stdout;
 use opt::Opt;
 use repo::Repo;
 use serde::Deserialize;
 use std::sync::Arc;
+use tower_http::trace::TraceLayer;
+use tracing_subscriber::{
+    Registry,
+    layer::SubscriberExt,
+};
 use crate::http::{not_found, HttpResponseError};
+
+use tracing::info;
 
 #[tokio::main]
 async fn main() {
@@ -31,6 +39,11 @@ async fn main() {
     .format_target(false)
     .init();
 
+    let tracer = stdout::new_pipeline().install_simple();
+    let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
+    let subscriber = Registry::default().with(telemetry);
+    tracing::subscriber::set_global_default(subscriber).unwrap();
+
     let opt = Opt::parse();
     dbg!(&opt);
 
@@ -43,7 +56,8 @@ async fn main() {
         .route("/", get(root))
         .route("/:id", get(arena))
         .layer(AddExtensionLayer::new(opt.clone()))
-        .layer(AddExtensionLayer::new(repo));
+        .layer(AddExtensionLayer::new(repo))
+        .layer(TraceLayer::new_for_http());
 
     let app = if opt.nocors {
         app
