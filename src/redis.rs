@@ -1,11 +1,11 @@
 use crate::arena::ArenaFull;
 use crate::repo::Repo;
 use futures::stream::StreamExt;
-use log::error;
 use redis::RedisError;
 use serde_json::Error as SerdeJsonError;
 use std::sync::Arc;
 use thiserror::Error as ThisError;
+use tracing::error;
 
 #[derive(ThisError, Debug)]
 pub enum Error {
