@@ -25,8 +25,6 @@ use tracing_subscriber::{
 };
 use crate::http::{not_found, HttpResponseError};
 
-use tracing::info;
-
 #[tokio::main]
 async fn main() {
     env_logger::Builder::from_env(
